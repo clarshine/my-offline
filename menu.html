@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="login-form">
+        <h1>Login</h1>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <input type="text" id="otp" placeholder="OTP" required>
+        <button id="login-button">Login</button>
+        <div id="login-error" style="color: red; display: none;">Invalid credentials</div>
+    </div>
+    <div id="menu" style="display: none;">
+        <h1>Menu</h1>
+        <button id="request-leave">Request Leave</button>
+        <button id="overtime">Overtime</button>
+        <button id="transport-claim">Transport Claim</button>
+        <button id="logout">Logout</button>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>
+

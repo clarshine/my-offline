@@ -1,0 +1,73 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    text-align: center;
+}
+
+#time {
+    text-align: center;
+    font-size: 24px;
+    margin: 20px;
+}
+
+#map {
+    margin: 20px auto;
+}
+
+button {
+    display: block;
+    width: 200px;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#record-display {
+    margin: 20px;
+}
+
+.record {
+    border: 1px solid #ccc;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.record-in {
+    background-color: #e7f7d2; /* Background color for Record In */
+}
+
+.record-out {
+    background-color: #f7d2d2; /* Background color for Record Out */
+}
+
+.record.online {
+    border-color: #4caf50; /* Green for synced data */
+}
+
+.record.offline {
+    border-color: #ffeb3b; /* Yellow for unsynced data */
+}
+
+.notification {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    color: #fff;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.notification.success {
+    background-color: #4caf50;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+ 
