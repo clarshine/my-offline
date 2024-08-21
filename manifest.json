@@ -3,9 +3,9 @@
     "name": "HR System for Workers",
     "icons": [
       {
-        "src": "icons/7.jpg",
-        "sizes": "8337x8337",
-        "type": "image/jpg"
+        "src": "logo-383x463.png",
+        "sizes": "383x463",
+        "type": "image/png"
       }
     ],
     "start_url": "/index.html",
