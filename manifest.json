@@ -3,7 +3,7 @@
     "name": "HR System for Workers",
     "icons": [
       {
-        "src": "logo-383x463.png",
+        "src": "icons/logo-383x463.png",
         "sizes": "383x463",
         "type": "image/png"
       }
