@@ -5,7 +5,7 @@ const urlsToCache = [
   '/menu.html',
   '/css/style.css',
   '/js/app.js',
-  '/icons/7.jpg'
+  '/icons/logo-383x463.png'
 ];
 
 self.addEventListener('install', (event) => {
