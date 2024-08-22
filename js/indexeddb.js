@@ -1,11 +1,11 @@
 // Membuka atau membuat Database dan Object Store
 let db;
-const request = indexedDB.open('FormDatabase', 1);
+const request = indexedDB.open('AttendanceDatabase', 1);
 
 request.onupgradeneeded = function(event) {
     db = event.target.result;
-    if (!db.objectStoreNames.contains('forms')) {
-        const objectStore = db.createObjectStore('forms', { keyPath: 'id', autoIncrement: true });
+    if (!db.objectStoreNames.contains('records')) {
+        const objectStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
         objectStore.createIndex('timestamp', 'timestamp', { unique: false });
     }
 };
@@ -13,6 +13,7 @@ request.onupgradeneeded = function(event) {
 request.onsuccess = function(event) {
     db = event.target.result;
     console.log('Database opened successfully');
+    updateRecordDisplay(); // Update display once DB is opened
 };
 
 request.onerror = function(event) {
@@ -26,8 +27,8 @@ function saveToIndexedDB(record) {
         return;
     }
 
-    const transaction = db.transaction(['forms'], 'readwrite');
-    const objectStore = transaction.objectStore('forms');
+    const transaction = db.transaction(['records'], 'readwrite');
+    const objectStore = transaction.objectStore('records');
     const request = objectStore.add(record);
 
     request.onsuccess = function() {
@@ -35,20 +36,19 @@ function saveToIndexedDB(record) {
     };
 
     request.onerror = function(event) {
-        console.error('Error saving record data:', event.target.errorCode);
+        console.error('Error saving record:', event.target.errorCode);
     };
 }
 
-// Mengambil data dari IndexedDB
 function getFromIndexedDB() {
     return new Promise((resolve, reject) => {
         if (!db) {
-            reject(new Error('Database is not initialized.'));
+            reject('Database is not initialized.');
             return;
         }
 
-        const transaction = db.transaction(['forms'], 'readonly');
-        const objectStore = transaction.objectStore('forms');
+        const transaction = db.transaction(['records'], 'readonly');
+        const objectStore = transaction.objectStore('records');
         const request = objectStore.getAll();
 
         request.onsuccess = function(event) {
@@ -56,28 +56,51 @@ function getFromIndexedDB() {
         };
 
         request.onerror = function(event) {
-            reject(event.target.errorCode);
+            reject('Error fetching data:', event.target.errorCode);
         };
     });
 }
 
-// Menghapus data dari IndexedDB
-function deleteFromIndexedDB(id) {
+function syncOfflineData() {
+    getFromIndexedDB().then(records => {
+        return fetch('/api/save-records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(records)
+        });
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Offline data synced successfully');
+            // Clear IndexedDB after successful sync
+            clearIndexedDB();
+        }
+    })
+    .catch(error => {
+        console.error('Error syncing offline data:', error);
+    });
+}
+
+function clearIndexedDB() {
     if (!db) {
         console.error('Database is not initialized.');
         return;
     }
 
-    const transaction = db.transaction(['forms'], 'readwrite');
-    const objectStore = transaction.objectStore('forms');
-    const request = objectStore.delete(id);
+    const transaction = db.transaction(['records'], 'readwrite');
+    const objectStore = transaction.objectStore('records');
+    const request = objectStore.clear();
 
     request.onsuccess = function() {
-        console.log('Record deleted from IndexedDB');
+        console.log('IndexedDB cleared');
     };
 
     request.onerror = function(event) {
-        console.error('Error deleting record data:', event.target.errorCode);
+        console.error('Error clearing IndexedDB:', event.target.errorCode);
     };
 }
+
 
