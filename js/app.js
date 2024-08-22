@@ -43,27 +43,18 @@ document.addEventListener('DOMContentLoaded', () => {
         showInfoBox('out');
     });
 
-    // Fungsi untuk mendapatkan waktu saat ini dan memperbarui elemen jam
-function updateClock() {
-  const now = new Date();
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
-  
-  // Format waktu dalam bentuk HH:MM:SS
-  const timeString = `${hours}:${minutes}:${seconds}`;
+    function updateClock() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        const timeString = `${hours}:${minutes}:${seconds}`;
+        document.getElementById('clock').textContent = timeString;
+    }
 
-  // Update elemen jam dengan waktu saat ini
-  document.getElementById('clock').textContent = timeString;
-}
+    setInterval(updateClock, 1000);
+    updateClock();
 
-// Panggil updateClock setiap detik
-setInterval(updateClock, 1000);
-
-// Panggil updateClock sekali saat halaman pertama kali dimuat
-updateClock();
-
-    
     function saveRecord(type) {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -75,7 +66,7 @@ updateClock();
                     type: type,
                     time: new Date().toISOString(),
                     location: { lat, lng },
-                    synced: false // Flag to check if record is synced
+                    synced: false
                 };
                 records.push(newRecord);
                 localStorage.setItem('attendanceRecords', JSON.stringify(records));
@@ -136,12 +127,12 @@ updateClock();
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then((registration) => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
+        navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch((error) => {
+                console.error('Service Worker registration failed:', error);
+            });
     });
 }
