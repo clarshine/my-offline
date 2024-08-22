@@ -1,110 +1,47 @@
-/* style.css */
-
-/* Style umum untuk body */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
     padding: 20px;
 }
 
-/* Style untuk judul utama */
-h1 {
-    text-align: center;
-    color: #333;
+#map {
+    width: 100%;
+    height: 300px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
 }
 
-/* Style untuk tombol Record In dan Record Out */
-button {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    color: #fff;
-}
-
-#record-in {
-    background-color: #4CAF50; /* Hijau untuk Record In */
-}
-
-#record-out {
-    background-color: #f44336; /* Merah untuk Record Out */
-}
-
-/* Style untuk menampilkan waktu saat ini */
-#time {
-    text-align: center;
-    font-size: 24px;
+#info-box {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
     margin-bottom: 20px;
 }
 
-/* Style untuk container record display */
+#info-box p {
+    margin: 5px 0;
+}
+
+button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
 #record-display {
     margin-top: 20px;
 }
 
-/* Style untuk setiap record */
 .record {
-    background-color: #fff;
-    padding: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
     margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #f9f9f9;
 }
 
-/* Warna untuk record yang disinkronisasi (online) */
 .record.online {
-    border-left: 5px solid #4CAF50;
+    border-color: green;
 }
 
-/* Warna untuk record yang belum disinkronisasi (offline) */
 .record.offline {
-    border-left: 5px solid #f44336;
-}
-
-/* Style untuk jenis record in */
-.record-in {
-    border-top: 3px solid #4CAF50;
-}
-
-/* Style untuk jenis record out */
-.record-out {
-    border-top: 3px solid #f44336;
-}
-
-/* Style untuk teks di dalam record */
-.record p {
-    margin: 5px 0;
-    color: #555;
-}
-
-/* Notification style */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #4CAF50;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    font-size: 16px;
-    z-index: 1000;
-}
-
-.notification.success {
-    background-color: #4CAF50;
-}
-
-.notification.error {
-    background-color: #f44336;
-}
-
-}
-
-.offline {
-    border-left: 5px solid #f44336;
+    border-color: orange;
 }
