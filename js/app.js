@@ -1,11 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Menampilkan waktu saat ini setiap detik
     setInterval(() => {
         const now = new Date();
         document.getElementById('time').innerText = now.toLocaleTimeString();
     }, 1000);
 
-    // Fungsi untuk menginisialisasi peta dengan lokasi pengguna
     function initMap() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -43,10 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
         handleRecord('out');
     });
 
-    // Fungsi untuk menangani presensi
     async function handleRecord(type) {
         try {
-            // Mendapatkan lokasi dan waktu
             const locationAndTime = await getLocationAndTime();
             const record = {
                 type,
@@ -55,10 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 synced: false
             };
 
-            // Menyimpan ke IndexedDB
             await saveToIndexedDB(record);
 
-            // Mengirim data ke server jika online
             if (navigator.onLine) {
                 await sendRecordToServer(record);
             } else {
@@ -71,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mendapatkan lokasi dan waktu saat ini
     function getLocationAndTime() {
         return new Promise((resolve, reject) => {
             if (navigator.geolocation) {
@@ -89,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Mengupdate tampilan riwayat presensi
     function updateRecordDisplay() {
         getFromIndexedDB().then(records => {
             const recordDisplay = document.getElementById('record-display');
@@ -104,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Menampilkan notifikasi
     function showNotification(message, type) {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
@@ -115,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // Mengirim data presensi ke server
     async function sendRecordToServer(record) {
         return fetch('/api/save-records', {
             method: 'POST',
@@ -135,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
           });
     }
 
-    // Menyinkronkan data yang disimpan secara offline
     async function syncRecords() {
         const records = await getFromIndexedDB();
         if (records.length > 0 && navigator.onLine) {
@@ -144,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     await sendRecordToServer(record);
                 }
             }
-            await syncOfflineData(); // Clear synced records
+            await syncOfflineData();
         }
     }
 
@@ -163,5 +152,3 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-
-  
