@@ -1,12 +1,11 @@
-// indexeddb.js
-
+// Membuka atau membuat Database dan Object Store
 let db;
-const request = indexedDB.open('AttendanceDatabase', 1);
+const request = indexedDB.open('FormDatabase', 1);
 
 request.onupgradeneeded = function(event) {
     db = event.target.result;
-    if (!db.objectStoreNames.contains('records')) {
-        const objectStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
+    if (!db.objectStoreNames.contains('forms')) {
+        const objectStore = db.createObjectStore('forms', { keyPath: 'id', autoIncrement: true });
         objectStore.createIndex('timestamp', 'timestamp', { unique: false });
     }
 };
@@ -20,10 +19,10 @@ request.onerror = function(event) {
     console.error('Database error:', event.target.errorCode);
 };
 
-// Menyimpan data presensi ke IndexedDB
-async function saveToIndexedDB(record) {
-    const transaction = db.transaction(['records'], 'readwrite');
-    const objectStore = transaction.objectStore('records');
+// Menyimpan data ke IndexedDB
+function saveToIndexedDB(record) {
+    const transaction = db.transaction(['forms'], 'readwrite');
+    const objectStore = transaction.objectStore('forms');
     const request = objectStore.add(record);
 
     request.onsuccess = function() {
@@ -31,15 +30,15 @@ async function saveToIndexedDB(record) {
     };
 
     request.onerror = function(event) {
-        console.error('Error saving record:', event.target.errorCode);
+        console.error('Error saving record data:', event.target.errorCode);
     };
 }
 
-// Mengambil data presensi dari IndexedDB
-async function getFromIndexedDB() {
+// Mengambil data dari IndexedDB
+function getFromIndexedDB() {
     return new Promise((resolve, reject) => {
-        const transaction = db.transaction(['records'], 'readonly');
-        const objectStore = transaction.objectStore('records');
+        const transaction = db.transaction(['forms'], 'readonly');
+        const objectStore = transaction.objectStore('forms');
         const request = objectStore.getAll();
 
         request.onsuccess = function(event) {
@@ -52,10 +51,10 @@ async function getFromIndexedDB() {
     });
 }
 
-// Menghapus data presensi dari IndexedDB
-async function deleteFromIndexedDB(id) {
-    const transaction = db.transaction(['records'], 'readwrite');
-    const objectStore = transaction.objectStore('records');
+// Menghapus data dari IndexedDB
+function deleteFromIndexedDB(id) {
+    const transaction = db.transaction(['forms'], 'readwrite');
+    const objectStore = transaction.objectStore('forms');
     const request = objectStore.delete(id);
 
     request.onsuccess = function() {
@@ -63,59 +62,7 @@ async function deleteFromIndexedDB(id) {
     };
 
     request.onerror = function(event) {
-        console.error('Error deleting record:', event.target.errorCode);
+        console.error('Error deleting record data:', event.target.errorCode);
     };
 }
 
-// Menyinkronkan data offline ke server
-async function syncOfflineData() {
-    const records = await getFromIndexedDB();
-    for (const record of records) {
-        if (!record.synced) {
-            await sendDataToServer(record);
-            await deleteFromIndexedDB(record.id);
-        }
-    }
-}
-
-// Mengirim data dari IndexedDB ke server
-async function sendDataToServer(record) {
-    try {
-        const response = await fetch('/api/save-records', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(record)
-        });
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error('Failed to sync record.');
-        }
-    } catch (error) {
-        console.error('Error syncing record:', error);
-    }
-}
-
-// Fungsi untuk menangani pengiriman data secara manual
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    
-    const formData = {
-        name: document.getElementById('name').value,
-        email: document.getElementById('email').value,
-        message: document.getElementById('message').value,
-        timestamp: new Date().toISOString()
-    };
-    
-    if (navigator.onLine) {
-        sendDataToServer(formData);
-    } else {
-        saveFormDataToIndexedDB(formData);
-        alert('You are offline. Your form data has been saved and will be sent when you are online.');
-    }
-}
-
-document.getElementById('myForm').addEventListener('submit', handleFormSubmit);
-
-window.addEventListener('online', syncOfflineData);
