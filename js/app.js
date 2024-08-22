@@ -4,6 +4,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('time').innerText = now.toLocaleTimeString();
     }, 1000);
 
+    function updateRecordDisplay() {
+    if (!db) {
+        console.error('Database is not initialized.');
+        return;
+    }
+
+    // Mengambil data dari IndexedDB dan menampilkannya
+    getFromIndexedDB().then(records => {
+        const recordDisplay = document.getElementById('record-display');
+        recordDisplay.innerHTML = records.map(record => `
+            <div class="record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}">
+                <p>Type: ${record.type === 'in' ? 'Record In' : 'Record Out'}</p>
+                <p>Time: ${new Date(record.time).toLocaleString()}</p>
+                <p>Location: ${record.location}</p>
+                <p>Status: ${record.synced ? 'Synced' : 'Pending'}</p>
+            </div>
+        `).join('');
+    }).catch(error => {
+        console.error('Error fetching records from IndexedDB:', error);
+    });
+}
+
     function initMap() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
