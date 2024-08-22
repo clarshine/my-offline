@@ -3,10 +3,9 @@
     "name": "Attendance System for Workers",
     "icons": [
       {
-        "src": "icons/logo-383x463.png",
-        "sizes": "383x463",
-        "type": "image/png",
-        "purpose" : "any"
+        "src": "icons/purple-logo-1510x1510.png",
+        "sizes": "1510x1510",
+        "type": "image/png"
       }
     ],
     "start_url": "/index.html",
