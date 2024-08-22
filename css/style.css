@@ -1,58 +1,43 @@
+/* Style umum */
 body {
     font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 h1 {
     text-align: center;
+    margin-top: 20px;
 }
 
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Style untuk menampilkan waktu */
 #time {
     text-align: center;
     font-size: 24px;
     margin: 20px;
 }
 
+/* Style untuk peta */
 #map {
+    height: 400px; /* Tinggi peta, sesuaikan dengan kebutuhan Anda */
+    width: 100%;   /* Lebar peta */
     margin: 20px auto;
 }
 
-button {
-    display: block;
-    width: 200px;
-    margin: 10px auto;
-    padding: 10px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
+/* Style untuk tampilan record */
 #record-display {
     margin: 20px;
 }
 
-.record {
-    border: 1px solid #ccc;
-    margin: 10px;
-    padding: 10px;
-    border-radius: 5px;
-    position: relative;
-}
-
-.record-in {
-    background-color: #e7f7d2; /* Background color for Record In */
-}
-
-.record-out {
-    background-color: #f7d2d2; /* Background color for Record Out */
-}
-
-.record.online {
-    border-color: #4caf50; /* Green for synced data */
-}
-
-.record.offline {
-    border-color: #ffeb3b; /* Yellow for unsynced data */
-}
-
+/* Style untuk notifikasi */
 .notification {
     position: fixed;
     top: 10px;
@@ -60,7 +45,6 @@ button {
     padding: 10px;
     color: #fff;
     border-radius: 5px;
-    z-index: 1000;
 }
 
 .notification.success {
@@ -70,4 +54,30 @@ button {
 .notification.error {
     background-color: #f44336;
 }
- 
+
+.notification.info {
+    background-color: #2196f3;
+}
+
+.record {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.record-in {
+    background-color: #e0f7fa;
+}
+
+.record-out {
+    background-color: #ffe0b2;
+}
+
+.online {
+    border-left: 5px solid #4caf50;
+}
+
+.offline {
+    border-left: 5px solid #f44336;
+}
