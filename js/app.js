@@ -39,6 +39,44 @@ document.addEventListener('DOMContentLoaded', () => {
         handleRecord('out');
     });
 
+    // Fungsi untuk memperbarui tampilan daftar record
+function updateRecordDisplay() {
+    if (!db) {
+        console.error('Database is not initialized.');
+        return;
+    }
+
+    getFromIndexedDB().then(records => {
+        const recordDisplay = document.getElementById('record-display');
+        
+        // Reset the display area before appending new records
+        recordDisplay.innerHTML = ''; 
+
+        // Loop through each record and create HTML elements to display it
+        records.forEach(record => {
+            const recordElement = document.createElement('div');
+            recordElement.className = `record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}`;
+
+            recordElement.innerHTML = `
+                <p>Type: ${record.type === 'in' ? 'Record In' : 'Record Out'}</p>
+                <p>Time: ${new Date(record.time).toLocaleString()}</p>
+                <p>Location: ${record.location}</p>
+                <p>Status: ${record.synced ? 'Synced' : 'Pending'}</p>
+            `;
+
+            // Append the record element to the display area
+            recordDisplay.appendChild(recordElement);
+        });
+    }).catch(error => {
+        console.error('Error fetching records from IndexedDB:', error);
+    });
+}
+
+// Panggil fungsi ini saat halaman dimuat untuk menampilkan daftar record
+document.addEventListener('DOMContentLoaded', () => {
+    updateRecordDisplay();
+});
+
     // Fungsi untuk menangani rekaman (in/out)
     function handleRecord(type) {
         if (!db) {
