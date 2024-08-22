@@ -6,15 +6,20 @@
     <title>Attendance Record</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="/manifest.json">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZWdESJaGEyPEPlpJ_7cXfxzpwM5EfqVQ"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script> <!-- Tambahkan ini -->
 </head>
 <body>
     <h1>Attendance Record</h1>
     <div id="time"></div>
     <button id="record-in">Record In</button>
     <button id="record-out">Record Out</button>
+    
+    <!-- Elemen untuk menampilkan peta -->
+    <div id="map"></div>
+    
     <div id="record-display"></div>
     <script src="js/app.js"></script>
     <script src="js/indexeddb.js"></script>
 </body>
 </html>
+
