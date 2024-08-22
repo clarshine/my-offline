@@ -1,11 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Menampilkan waktu saat ini
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('time').innerText = now.toLocaleTimeString();
-    }, 1000);
-
-    // Inisialisasi peta dan geolokasi
     function initMap() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -20,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     map: map,
                     title: 'You are here'
                 });
+
+                // Update the info box with current location
+                document.getElementById('info-location').innerText = `Location: Latitude ${lat}, Longitude ${lng}`;
             }, () => {
                 alert('Error getting location');
             });
@@ -27,147 +23,93 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Geolocation not supported by this browser.');
         }
     }
-    initMap();
 
-    // Event listener untuk tombol "Record In"
+    // Initialize the map when the script is loaded
+    window.initMap = initMap; // Make sure initMap is accessible globally
+
+    // Setup event listeners and other functions
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('time').innerText = now.toLocaleTimeString();
+    }, 1000);
+
     document.getElementById('record-in').addEventListener('click', () => {
-        handleRecord('in');
+        saveRecord('in');
+        showInfoBox('in');
     });
 
-    // Event listener untuk tombol "Record Out"
     document.getElementById('record-out').addEventListener('click', () => {
-        handleRecord('out');
+        saveRecord('out');
+        showInfoBox('out');
     });
 
-    // Fungsi untuk memperbarui tampilan daftar record
-function updateRecordDisplay() {
-    if (!db) {
-        console.error('Database is not initialized.');
-        return;
+    function saveRecord(type) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+                const newRecord = {
+                    type: type,
+                    time: new Date().toISOString(),
+                    location: { lat, lng },
+                    synced: false // Flag to check if record is synced
+                };
+                records.push(newRecord);
+                localStorage.setItem('attendanceRecords', JSON.stringify(records));
+                updateRecordDisplay();
+                showInfoBox(type);
+            });
+        } else {
+            alert('Geolocation not supported by this browser.');
+        }
     }
 
-    getFromIndexedDB().then(records => {
+    function updateRecordDisplay() {
+        const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
         const recordDisplay = document.getElementById('record-display');
-        
-        // Reset the display area before appending new records
-        recordDisplay.innerHTML = ''; 
-
-        // Loop through each record and create HTML elements to display it
-        records.forEach(record => {
-            const recordElement = document.createElement('div');
-            recordElement.className = `record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}`;
-
-            recordElement.innerHTML = `
+        recordDisplay.innerHTML = records.map(record => `
+            <div class="record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}">
                 <p>Type: ${record.type === 'in' ? 'Record In' : 'Record Out'}</p>
                 <p>Time: ${new Date(record.time).toLocaleString()}</p>
-                <p>Location: ${record.location}</p>
+                <p>Location: ${record.location.lat}, ${record.location.lng}</p>
                 <p>Status: ${record.synced ? 'Synced' : 'Pending'}</p>
-            `;
-
-            // Append the record element to the display area
-            recordDisplay.appendChild(recordElement);
-        });
-    }).catch(error => {
-        console.error('Error fetching records from IndexedDB:', error);
-    });
-}
-
-// Panggil fungsi ini saat halaman dimuat untuk menampilkan daftar record
-document.addEventListener('DOMContentLoaded', () => {
-    updateRecordDisplay();
-});
-
-    // Fungsi untuk menangani rekaman (in/out)
-    function handleRecord(type) {
-        if (!db) {
-            alert('Database is not initialized.');
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition((position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            const record = {
-                type: type,
-                time: new Date().toISOString(),
-                location: `${lat}, ${lng}`,
-                synced: false
-            };
-
-            saveToIndexedDB(record);
-            showNotification(`${type === 'in' ? 'Record In' : 'Record Out'} Successful`, 'success');
-        }, () => {
-            showNotification('Error getting location', 'error');
-        });
+            </div>
+        `).join('');
     }
 
-    // Fungsi untuk memperbarui tampilan daftar record
-    function updateRecordDisplay() {
-        if (!db) {
-            console.error('Database is not initialized.');
-            return;
-        }
-
-        getFromIndexedDB().then(records => {
-            const recordDisplay = document.getElementById('record-display');
-            recordDisplay.innerHTML = records.map(record => `
-                <div class="record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}">
-                    <p>Type: ${record.type === 'in' ? 'Record In' : 'Record Out'}</p>
-                    <p>Time: ${new Date(record.time).toLocaleString()}</p>
-                    <p>Location: ${record.location}</p>
-                    <p>Status: ${record.synced ? 'Synced' : 'Pending'}</p>
-                </div>
-            `).join('');
-        }).catch(error => {
-            console.error('Error fetching records from IndexedDB:', error);
-        });
+    function showInfoBox(type) {
+        const now = new Date();
+        document.getElementById('info-type').innerText = `Type: ${type === 'in' ? 'Record In' : 'Record Out'}`;
+        document.getElementById('info-time').innerText = `Time: ${now.toLocaleString()}`;
+        document.getElementById('info-location').innerText = `Location: 0, 0`; // Use actual location
+        document.getElementById('info-status').innerText = `Status: Pending`;
     }
 
-    // Menampilkan notifikasi
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerText = message;
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-
-    // Sinkronisasi record ketika online
     function syncRecords() {
-        getFromIndexedDB().then(records => {
-            if (navigator.onLine) {
-                fetch('/api/save-records', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(records)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        records.forEach(record => {
-                            record.synced = true;
-                        });
-                        saveToIndexedDB(records);
-                        updateRecordDisplay();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error syncing records:', error);
-                });
-            }
-        }).catch(error => {
-            console.error('Error fetching records for sync:', error);
-        });
+        const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+
+        if (navigator.onLine) {
+            fetch('/api/save-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(records)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const updatedRecords = records.map(record => ({ ...record, synced: true }));
+                    localStorage.setItem('attendanceRecords', JSON.stringify(updatedRecords));
+                    updateRecordDisplay();
+                }
+            });
+        }
     }
 
     window.addEventListener('online', syncRecords);
-
-    // Tampilkan daftar record saat halaman dimuat
     updateRecordDisplay();
 });
 
@@ -182,4 +124,3 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
-
