@@ -9,20 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
             navigator.geolocation.getCurrentPosition((position) => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
-
-                // Membuat peta
                 const map = new google.maps.Map(document.getElementById('map'), {
                     center: { lat, lng },
                     zoom: 15
                 });
-
-                // Menambahkan marker di lokasi pengguna
                 new google.maps.Marker({
                     position: { lat, lng },
                     map: map,
                     title: 'You are here'
                 });
-            }, (error) => {
+            }, () => {
                 alert('Error getting location');
             });
         } else {
@@ -31,68 +27,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     initMap();
 
-    // Event listener untuk tombol Record In
     document.getElementById('record-in').addEventListener('click', () => {
         handleRecord('in');
     });
 
-    // Event listener untuk tombol Record Out
     document.getElementById('record-out').addEventListener('click', () => {
         handleRecord('out');
     });
 
-    async function handleRecord(type) {
-        try {
-            const locationAndTime = await getLocationAndTime();
+    function handleRecord(type) {
+        if (!db) {
+            alert('Database is not initialized.');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
             const record = {
-                type,
-                time: locationAndTime.timestamp,
-                location: `Lat: ${locationAndTime.latitude}, Lng: ${locationAndTime.longitude}`,
+                type: type,
+                time: new Date().toISOString(),
+                location: `${lat}, ${lng}`,
                 synced: false
             };
 
-            await saveToIndexedDB(record);
+            saveToIndexedDB(record);
 
-            if (navigator.onLine) {
-                await sendRecordToServer(record);
-            } else {
-                showNotification('Record saved locally. Will sync when online.', 'info');
-            }
-            updateRecordDisplay();
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification('Error recording attendance.', 'error');
-        }
-    }
-
-    function getLocationAndTime() {
-        return new Promise((resolve, reject) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const { latitude, longitude } = position.coords;
-                    resolve({
-                        latitude,
-                        longitude,
-                        timestamp: new Date().toISOString()
-                    });
-                }, (error) => reject(error));
-            } else {
-                reject(new Error('Geolocation not supported.'));
-            }
-        });
-    }
-
-    function updateRecordDisplay() {
-        getFromIndexedDB().then(records => {
-            const recordDisplay = document.getElementById('record-display');
-            recordDisplay.innerHTML = records.map(record => `
-                <div class="record ${record.synced ? 'online' : 'offline'} ${record.type === 'in' ? 'record-in' : 'record-out'}">
-                    <p>Type: ${record.type === 'in' ? 'Record In' : 'Record Out'}</p>
-                    <p>Time: ${new Date(record.time).toLocaleString()}</p>
-                    <p>Location: ${record.location}</p>
-                    <p>Status: ${record.synced ? 'Synced' : 'Pending'}</p>
-                </div>
-            `).join('');
+            showNotification(`${type === 'in' ? 'Record In' : 'Record Out'} Successful`, 'success');
+        }, () => {
+            showNotification('Error getting location', 'error');
         });
     }
 
@@ -106,34 +70,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    async function sendRecordToServer(record) {
-        return fetch('/api/save-records', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(record)
-        }).then(response => response.json())
-          .then(data => {
-              if (data.success) {
-                  showNotification('Record successfully sent to server.', 'success');
-                  record.synced = true;
-                  updateRecordDisplay();
-              } else {
-                  throw new Error('Failed to sync record.');
-              }
-          });
-    }
+    function syncRecords() {
+        const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
 
-    async function syncRecords() {
-        const records = await getFromIndexedDB();
-        if (records.length > 0 && navigator.onLine) {
-            for (const record of records) {
-                if (!record.synced) {
-                    await sendRecordToServer(record);
+        if (navigator.onLine) {
+            fetch('/api/save-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(records)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const updatedRecords = records.map(record => ({ ...record, synced: true }));
+                    localStorage.setItem('attendanceRecords', JSON.stringify(updatedRecords));
+                    updateRecordDisplay();
                 }
-            }
-            await syncOfflineData();
+            })
+            .catch(error => {
+                console.error('Error syncing records:', error);
+            });
         }
     }
 
