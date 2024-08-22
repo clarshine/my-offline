@@ -10,11 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
 
+                // Membuat peta
                 const map = new google.maps.Map(document.getElementById('map'), {
                     center: { lat, lng },
                     zoom: 15
                 });
 
+                // Menambahkan marker di lokasi pengguna
                 new google.maps.Marker({
                     position: { lat, lng },
                     map: map,
@@ -29,10 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     initMap();
 
+    // Event listener untuk tombol Record In
     document.getElementById('record-in').addEventListener('click', () => {
         handleRecord('in');
     });
 
+    // Event listener untuk tombol Record Out
     document.getElementById('record-out').addEventListener('click', () => {
         handleRecord('out');
     });
