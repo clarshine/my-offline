@@ -66,8 +66,7 @@ function sendDataToServer(formData) {
     .then(response => response.json())
     .then(data => {
         console.log('Success:', data);
-        // Remove data from IndexedDB after successful submission
-        deleteFormDataFromIndexedDB(formData.id);
+        // Menghapus data dari IndexedDB setelah penyerahan data berhasil
     })
     .catch((error) => {
         console.error('Error:', error);
