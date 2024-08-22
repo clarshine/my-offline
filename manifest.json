@@ -5,7 +5,8 @@
       {
         "src": "icons/logo-383x463.png",
         "sizes": "383x463",
-        "type": "image/png"
+        "type": "image/png",
+        "purpose" : "any"
       }
     ],
     "start_url": "/index.html",
