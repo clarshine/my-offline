@@ -1,6 +1,6 @@
 {
-    "short_name": "HR System",
-    "name": "HR System for Workers",
+    "short_name": "Offline Attendance",
+    "name": "Attendance System for Workers",
     "icons": [
       {
         "src": "icons/logo-383x463.png",
