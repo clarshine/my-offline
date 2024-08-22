@@ -36,6 +36,7 @@ function getFromIndexedDB() {
     return new Promise((resolve, reject) => {
         if (!db) {
             reject('Database is not initialized.');
+            return;
         }
 
         const transaction = db.transaction(['records'], 'readonly');
@@ -51,5 +52,6 @@ function getFromIndexedDB() {
         };
     });
 }
+
 
 
