@@ -1,11 +1,12 @@
-// Membuka atau membuat Database dan Object Store
+// indexeddb.js
+
 let db;
-const request = indexedDB.open('FormDatabase', 1);
+const request = indexedDB.open('AttendanceDatabase', 1);
 
 request.onupgradeneeded = function(event) {
     db = event.target.result;
-    if (!db.objectStoreNames.contains('forms')) {
-        const objectStore = db.createObjectStore('forms', { keyPath: 'id', autoIncrement: true });
+    if (!db.objectStoreNames.contains('records')) {
+        const objectStore = db.createObjectStore('records', { keyPath: 'id', autoIncrement: true });
         objectStore.createIndex('timestamp', 'timestamp', { unique: false });
     }
 };
@@ -19,22 +20,85 @@ request.onerror = function(event) {
     console.error('Database error:', event.target.errorCode);
 };
 
-// Menyimpan data ke IndexedDB
-function saveFormDataToIndexedDB(formData) {
-    const transaction = db.transaction(['forms'], 'readwrite');
-    const objectStore = transaction.objectStore('forms');
-    const request = objectStore.add(formData);
+// Menyimpan data presensi ke IndexedDB
+async function saveToIndexedDB(record) {
+    const transaction = db.transaction(['records'], 'readwrite');
+    const objectStore = transaction.objectStore('records');
+    const request = objectStore.add(record);
 
     request.onsuccess = function() {
-        console.log('Form data saved to IndexedDB');
+        console.log('Record saved to IndexedDB');
     };
 
     request.onerror = function(event) {
-        console.error('Error saving form data:', event.target.errorCode);
+        console.error('Error saving record:', event.target.errorCode);
     };
 }
 
-function handleFormSubmit(event) {
+// Mengambil data presensi dari IndexedDB
+async function getFromIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['records'], 'readonly');
+        const objectStore = transaction.objectStore('records');
+        const request = objectStore.getAll();
+
+        request.onsuccess = function(event) {
+            resolve(event.target.result);
+        };
+
+        request.onerror = function(event) {
+            reject(event.target.errorCode);
+        };
+    });
+}
+
+// Menghapus data presensi dari IndexedDB
+async function deleteFromIndexedDB(id) {
+    const transaction = db.transaction(['records'], 'readwrite');
+    const objectStore = transaction.objectStore('records');
+    const request = objectStore.delete(id);
+
+    request.onsuccess = function() {
+        console.log('Record deleted from IndexedDB');
+    };
+
+    request.onerror = function(event) {
+        console.error('Error deleting record:', event.target.errorCode);
+    };
+}
+
+// Menyinkronkan data offline ke server
+async function syncOfflineData() {
+    const records = await getFromIndexedDB();
+    for (const record of records) {
+        if (!record.synced) {
+            await sendDataToServer(record);
+            await deleteFromIndexedDB(record.id);
+        }
+    }
+}
+
+// Mengirim data dari IndexedDB ke server
+async function sendDataToServer(record) {
+    try {
+        const response = await fetch('/api/save-records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(record)
+        });
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error('Failed to sync record.');
+        }
+    } catch (error) {
+        console.error('Error syncing record:', error);
+    }
+}
+
+// Fungsi untuk menangani pengiriman data secara manual
+async function handleFormSubmit(event) {
     event.preventDefault();
     
     const formData = {
@@ -54,63 +118,4 @@ function handleFormSubmit(event) {
 
 document.getElementById('myForm').addEventListener('submit', handleFormSubmit);
 
-// Mengirim data dari IndexedDB ke server saat online
-function sendDataToServer(formData) {
-    fetch('/submit-form', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Success:', data);
-        // Menghapus data dari IndexedDB setelah penyerahan data berhasil
-    })
-    .catch((error) => {
-        console.error('Error:', error);
-    });
-}
-
-function syncOfflineData() {
-    const transaction = db.transaction(['forms'], 'readonly');
-    const objectStore = transaction.objectStore('forms');
-    const request = objectStore.getAll();
-
-    request.onsuccess = function(event) {
-        const allData = event.target.result;
-        allData.forEach(formData => {
-            sendDataToServer(formData);
-        });
-    };
-}
-
 window.addEventListener('online', syncOfflineData);
-
-// Menghapus data dari IndexedDB setelah dikirim
-function deleteFormDataFromIndexedDB(id) {
-    const transaction = db.transaction(['forms'], 'readwrite');
-    const objectStore = transaction.objectStore('forms');
-    const request = objectStore.delete(id);
-
-    request.onsuccess = function() {
-        console.log('Form data deleted from IndexedDB');
-    };
-
-    request.onerror = function(event) {
-        console.error('Error deleting form data:', event.target.errorCode);
-    };
-}
-
-/*Penjelasan Kode:
-- Membuka atau Membuat Database:
-Menggunakan indexedDB.open('FormDatabase', 1) untuk membuka database. Jika database belum ada, maka akan dibuat.
-onupgradeneeded digunakan untuk membuat object store forms dengan keyPath sebagai 'id', yang akan menjadi primary key dan otomatis di-increment.
-- Menyimpan Data ke IndexedDB:
-Saat form di-submit dan pengguna sedang offline, data disimpan ke IndexedDB menggunakan transaction dan objectStore.add(formData).
-- Mengirim Data ke Server saat Kembali Online:
-Ketika pengguna kembali online, syncOfflineData mengambil semua data dari IndexedDB dan mengirimkannya ke server dengan fetch. Setelah data berhasil dikirim, data dihapus dari IndexedDB menggunakan deleteFormDataFromIndexedDB.
-- Menghapus Data dari IndexedDB:
-Setelah data berhasil dikirim ke server, hapus data dari IndexedDB agar tidak dikirim berulang kali.
-*/
