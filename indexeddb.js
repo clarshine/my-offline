@@ -65,4 +65,3 @@ function deleteFromIndexedDB(id) {
         console.error('Error deleting record data:', event.target.errorCode);
     };
 }
-
