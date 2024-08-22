@@ -43,6 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
         showInfoBox('out');
     });
 
+    // Fungsi untuk mendapatkan waktu saat ini dan memperbarui elemen jam
+function updateClock() {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  
+  // Format waktu dalam bentuk HH:MM:SS
+  const timeString = `${hours}:${minutes}:${seconds}`;
+
+  // Update elemen jam dengan waktu saat ini
+  document.getElementById('clock').textContent = timeString;
+}
+
+// Panggil updateClock setiap detik
+setInterval(updateClock, 1000);
+
+// Panggil updateClock sekali saat halaman pertama kali dimuat
+updateClock();
+
+    
     function saveRecord(type) {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
