@@ -50,51 +50,23 @@ self.addEventListener('sync', event => {
 });
 
 async function syncAttendanceRecords() {
-    const db = await openIndexedDB(); // Function to open IndexedDB
-
-    const transaction = db.transaction('attendance', 'readwrite');
-    const store = transaction.objectStore('attendance');
-    const unsyncedRecords = await store.getAll(); // Fetch all records
-
-    const syncedRecords = await Promise.all(unsyncedRecords.map(async (record) => {
+    const unsyncedRecords = await getUnsyncedRecords();
+    if (unsyncedRecords.length > 0) {
         try {
             const response = await fetch('/api/save-records', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(record)
+                body: JSON.stringify(unsyncedRecords)
             });
 
             if (response.ok) {
-                record.synced = true;
-                store.put(record); // Update record as synced
-                return record;
+                // Tandai record sebagai sudah disinkronisasi
+                await markRecordsAsSynced(unsyncedRecords);
             }
-        } catch (err) {
-            console.error('Sync failed:', err);
+        } catch (error) {
+            console.error('Sync failed:', error);
         }
-        return null;
-    }));
-
-    return syncedRecords.filter(record => record !== null);
-}
-
-function openIndexedDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("attendanceDB", 1);
-
-        request.onupgradeneeded = function(event) {
-            const db = event.target.result;
-            db.createObjectStore("attendance", { keyPath: "id", autoIncrement: true });
-        };
-
-        request.onsuccess = function(event) {
-            resolve(event.target.result);
-        };
-
-        request.onerror = function(event) {
-            reject(event.target.error);
-        };
-    });
+    }
 }
