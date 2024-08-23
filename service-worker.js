@@ -70,3 +70,31 @@ async function syncAttendanceRecords() {
         }
     }
 }
+
+// Menambahkan event sync
+function saveRecord(type) {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            const record = {
+                type: type,
+                time: new Date().toISOString(),
+                location: { lat, lng },
+                synced: false
+            };
+            
+            saveRecordToIndexedDB(record);
+
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                navigator.serviceWorker.ready.then(registration => {
+                    return registration.sync.register('sync-attendance');
+                }).catch(console.error);
+            }
+        });
+    } else {
+        alert('Geolocation not supported by this browser.');
+    }
+}
+
