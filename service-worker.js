@@ -43,40 +43,58 @@ self.addEventListener('activate', (event) => {
 });
 
 // Menambahkan Background Sync
-self.addEventListener('sync', (event) => {
+self.addEventListener('sync', event => {
     if (event.tag === 'sync-attendance') {
         event.waitUntil(syncAttendanceRecords());
     }
 });
 
 async function syncAttendanceRecords() {
-    // Mengambil catatan kehadiran yang belum disinkronkan dari IndexedDB atau LocalStorage
-    const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
-    const unsyncedRecords = records.filter(record => !record.synced);
+    const db = await openIndexedDB(); // Function to open IndexedDB
 
-    if (unsyncedRecords.length > 0) {
+    const transaction = db.transaction('attendance', 'readwrite');
+    const store = transaction.objectStore('attendance');
+    const unsyncedRecords = await store.getAll(); // Fetch all records
+
+    const syncedRecords = await Promise.all(unsyncedRecords.map(async (record) => {
         try {
             const response = await fetch('/api/save-records', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(unsyncedRecords)
+                body: JSON.stringify(record)
             });
 
             if (response.ok) {
-                // Jika berhasil, tandai catatan sebagai tersinkronisasi
-                unsyncedRecords.forEach(record => {
-                    record.synced = true;
-                });
-                localStorage.setItem('attendanceRecords', JSON.stringify(records));
-                console.log('Records synced successfully');
-            } else {
-                console.error('Failed to sync records');
+                record.synced = true;
+                store.put(record); // Update record as synced
+                return record;
             }
-        } catch (error) {
-            console.error('Error syncing records:', error);
+        } catch (err) {
+            console.error('Sync failed:', err);
         }
-    }
+        return null;
+    }));
+
+    return syncedRecords.filter(record => record !== null);
 }
 
+function openIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("attendanceDB", 1);
+
+        request.onupgradeneeded = function(event) {
+            const db = event.target.result;
+            db.createObjectStore("attendance", { keyPath: "id", autoIncrement: true });
+        };
+
+        request.onsuccess = function(event) {
+            resolve(event.target.result);
+        };
+
+        request.onerror = function(event) {
+            reject(event.target.error);
+        };
+    });
+}
