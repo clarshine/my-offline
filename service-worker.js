@@ -41,3 +41,42 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Menambahkan Background Sync
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-attendance') {
+        event.waitUntil(syncAttendanceRecords());
+    }
+});
+
+async function syncAttendanceRecords() {
+    // Mengambil catatan kehadiran yang belum disinkronkan dari IndexedDB atau LocalStorage
+    const records = JSON.parse(localStorage.getItem('attendanceRecords')) || [];
+    const unsyncedRecords = records.filter(record => !record.synced);
+
+    if (unsyncedRecords.length > 0) {
+        try {
+            const response = await fetch('/api/save-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(unsyncedRecords)
+            });
+
+            if (response.ok) {
+                // Jika berhasil, tandai catatan sebagai tersinkronisasi
+                unsyncedRecords.forEach(record => {
+                    record.synced = true;
+                });
+                localStorage.setItem('attendanceRecords', JSON.stringify(records));
+                console.log('Records synced successfully');
+            } else {
+                console.error('Failed to sync records');
+            }
+        } catch (error) {
+            console.error('Error syncing records:', error);
+        }
+    }
+}
+
